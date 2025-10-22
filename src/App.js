@@ -1,13 +1,11 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
-import * as THREE from "three";
-import NET from "vanta/dist/vanta.net.min";
-
 
 
 const injectStyles = () => {
-  const id = "futuristic-styles";
+  const id = "particles-styles";
   if (document.getElementById(id)) return;
+
   const css = `
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap');
 
@@ -20,7 +18,15 @@ const injectStyles = () => {
       overflow: hidden;
     }
 
-    /* Contenedor centrado */
+    #particles-js {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      z-index: 0;
+    }
+
     .center-container {
       height: 100vh;
       display: flex;
@@ -45,7 +51,7 @@ const injectStyles = () => {
     h2, h1 {
       font-weight: 600;
       text-transform: uppercase;
-      color: #00eaff;
+      color: #ffffffff;
       letter-spacing: 2px;
     }
 
@@ -79,21 +85,6 @@ const injectStyles = () => {
       letter-spacing: 1px;
     }
 
-    button::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 200%;
-      height: 100%;
-      background: linear-gradient(120deg, transparent, rgba(0,234,255,0.5), transparent);
-      transition: 0.5s;
-    }
-
-    button:hover::before {
-      left: 100%;
-    }
-
     button:hover {
       transform: scale(1.05);
       box-shadow: 0 0 20px #00eaff;
@@ -110,36 +101,58 @@ const injectStyles = () => {
   document.head.appendChild(style);
 };
 
-// ===== Fondo con Vanta.js =====
-function VantaBackground() {
-  const vantaRef = useRef(null);
-  const effectRef = useRef(null);
 
+function ParticlesBackground() {
   useEffect(() => {
-    if (!effectRef.current) {
-      effectRef.current = NET({
-        el: vantaRef.current,
-        THREE: THREE,
-        mouseControls: true,
-        touchControls: true,
-        gyroControls: false,
-        minHeight: 200.0,
-        minWidth: 200.0,
-        scale: 1.0,
-        scaleMobile: 1.0,
-        color: 0x00eaff,
-        backgroundColor: 0x050510,
-        points: 12.0,
-        maxDistance: 20.0,
-        spacing: 15.0,
-      });
-    }
-    return () => {
-      if (effectRef.current) effectRef.current.destroy();
+    injectStyles();
+
+   
+    const script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js";
+    script.onload = () => {
+      if (window.particlesJS) {
+        window.particlesJS("particles-js", {
+          particles: {
+            number: { value: 80 },
+            color: { value: "#00eaff" },
+            shape: { type: "circle" },
+            opacity: { value: 0.6 },
+            size: { value: 3 },
+            line_linked: {
+              enable: true,
+              distance: 150,
+              color: "#00eaff",
+              opacity: 0.4,
+              width: 1,
+            },
+            move: {
+              enable: true,
+              speed: 2,
+              direction: "none",
+              out_mode: "out",
+            },
+          },
+          interactivity: {
+            detect_on: "canvas",
+            events: {
+              onhover: { enable: true, mode: "repulse" },
+              onclick: { enable: true, mode: "push" },
+            },
+            modes: {
+              repulse: { distance: 100, duration: 0.4 },
+              push: { particles_nb: 4 },
+            },
+          },
+          retina_detect: true,
+        });
+      }
     };
+    document.body.appendChild(script);
+
+    return () => script.remove();
   }, []);
 
-  return <div ref={vantaRef} style={{ width: "100%", height: "100%", position: "absolute", top: 0, left: 0, zIndex: 0 }} />;
+  return <div id="particles-js"></div>;
 }
 
 
@@ -149,12 +162,13 @@ function Login() {
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  useEffect(() => { injectStyles(); }, []);
-
   const saveAccount = (email, password) => {
     const accounts = JSON.parse(localStorage.getItem("accounts") || "[]");
     const exists = accounts.find((a) => a.email === email);
-    if (exists) { alert("⚠️ Esa cuenta ya existe"); return false; }
+    if (exists) {
+      alert("⚠️ Esa cuenta ya existe");
+      return false;
+    }
     accounts.push({ email, password });
     localStorage.setItem("accounts", JSON.stringify(accounts));
     alert("✅ Cuenta creada");
@@ -217,7 +231,6 @@ function Login() {
   );
 }
 
-
 function Dashboard() {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("session") || "null");
@@ -242,7 +255,7 @@ function Dashboard() {
 export default function App() {
   return (
     <Router>
-      <VantaBackground />
+      <ParticlesBackground />
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
